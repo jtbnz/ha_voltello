@@ -1,0 +1,9 @@
+{
+    "domain": "voltello",
+    "name": "Voltello",
+    "version": "1.0.0",
+    "documentation": "https://github.com/jtbnz/ha_voltello",
+    "requirements": ["requests"],
+    "dependencies": [],
+    "codeowners": ["@jtbnz"]
+  }
