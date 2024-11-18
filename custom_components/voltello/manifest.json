@@ -1,7 +1,7 @@
 {
     "domain": "voltello",
     "name": "Voltello",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "documentation": "https://github.com/jtbnz/ha_voltello",
     "requirements": ["requests"],
     "dependencies": [],
