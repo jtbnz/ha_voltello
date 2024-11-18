@@ -7,7 +7,9 @@
     "render_readme": true,
     "zip_release": true,
     "filename": "custom_components/voltello",
-    "manifest": "custom_components/voltello/manifest.json",
+    "manifest": {
+        "file": "custom_components/voltello/manifest.json"
+    },
     "source": "https://github.com/jtbnz/ha_voltello",
     "hide_default_branch": false
-  }
+}
