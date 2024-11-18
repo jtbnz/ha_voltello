@@ -1,0 +1,13 @@
+{
+    "name": "Voltello",
+    "content_in_root": false,
+    "domains": ["voltello"],
+    "country": "AU,NZ",
+    "homeassistant": "2021.6.0",
+    "render_readme": true,
+    "zip_release": false,
+    "filename": "custom_components/voltello",
+    "manifest": "custom_components/voltello/manifest.json",
+    "source": "https://github.com/jtbnz/ha_voltello",
+    "hide_default_branch": false
+  }
