@@ -1,6 +1,8 @@
 # Voltello Home Assistant Integration
 
-This is a custom integration for Home Assistant to integrate with the Voltello API.
+![Voltello Icon](icon.png)
+
+This is a custom UNOFFICAL integration for Home Assistant to integrate with the Voltello API.
 
 ## Installation
 
