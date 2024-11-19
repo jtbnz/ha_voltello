@@ -3,7 +3,7 @@
     "name": "Voltello",
     "version": "1.0.4",
     "documentation": "https://github.com/jtbnz/ha_voltello",
-    "requirements": ["requests"],
+    "requirements": ["requests>=2.28.0", "requests_toolbelt>=0.9.1"],
     "dependencies": [],
     "codeowners": ["@jtbnz"],
     "iot_class": "cloud_polling"

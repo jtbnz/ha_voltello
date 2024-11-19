@@ -4,33 +4,32 @@
 
 This is a custom UNOFFICAL integration for Home Assistant to integrate with the Voltello API.
 
+
+
 ## Installation
 
-1. Clone this repository into your Home Assistant `custom_components` directory:
-    ```sh
-    git clone https://github.com/yourusername/ha_voltello.git custom_components/voltello
-    ```
+1. Copy the `voltello` folder to your `config/custom_components` directory
+2. Restart Home Assistant
+3. Go to Configuration > Integrations
+4. Click the "+ ADD INTEGRATION" button
+5. Search for "Voltello"
+6. Enter your API Token, Customer ID, and Utility ID
 
-2. Restart Home Assistant.
+## Available Sensors
 
-3. Go to Configuration -> Integrations and click the "+" button to add a new integration.
-
-4. Search for "Voltello" and follow the setup instructions.
+- Solar Power (kW)
+- Grid Power (kW)
+- Battery Power (kW)
+- Battery State of Charge (%)
+- Home Power (kW)
+- EV Power (kW)
 
 ## Configuration
 
-You will need to provide the following information during setup:
+The following parameters are required:
+
 - API Token
 - Customer ID
 - Utility ID
 
-## HACS Installation TO BE DONE
-
-To add this integration to HACS in the future:
-1. Go to HACS -> Integrations -> "+" button.
-2. Add this repository URL: `https://github.com/jtbnz/ha_voltello` as a custom repository.
-3. Follow the installation instructions.
-
-## Usage
-
-Once configured, the integration will create sensors for solar, grid, battery, home, and EV power data. These sensors can be used in the Home Assistant energy dashboard and other automations.
+These can be obtained from your Voltello account.
