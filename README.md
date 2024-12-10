@@ -29,7 +29,7 @@ This is a custom UNOFFICAL integration for Home Assistant to integrate with the 
 The following parameters are required:
 
 - API Token
-- Customer ID
+- Customer ID (Not sure how you actually get this yet!)
 - Utility ID
 
 These can be obtained from your Voltello account.
