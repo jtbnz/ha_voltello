@@ -1,31 +1,26 @@
-from homeassistant import config_entries
-from homeassistant.core import callback
 import voluptuous as vol
+from homeassistant import config_entries
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
+import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, CONF_API_TOKEN, CONF_CUSTOMER_ID, CONF_UTILITY_ID
+DOMAIN = "voltello"
 
 class VoltelloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
-        errors = {}
-        if user_input is not None:
-            # Validate the credentials here if possible
-            return self.async_create_entry(
-                title="Voltello",
-                data={
-                    CONF_API_TOKEN: user_input[CONF_API_TOKEN],
-                    CONF_CUSTOMER_ID: user_input[CONF_CUSTOMER_ID],
-                    CONF_UTILITY_ID: user_input[CONF_UTILITY_ID],
-                }
+    async def async_step_user(self, user_input=None) -> FlowResult:
+        if user_input is None:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema({
+                    vol.Required("api_token"): str,
+                    vol.Required("customer_id"): str,
+                    vol.Required("utility_id"): str,
+                })
             )
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({
-                vol.Required(CONF_API_TOKEN): str,
-                vol.Required(CONF_CUSTOMER_ID): str,
-                vol.Required(CONF_UTILITY_ID): str,
-            }),
-            errors=errors,
+        return self.async_create_entry(
+            title="Voltello Energy Monitor",
+            data=user_input
         )

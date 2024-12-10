@@ -1,76 +1,66 @@
-from datetime import timedelta
-import logging
-from homeassistant.helpers.entity import Entity
+from __future__ import annotations
+from typing import Any
+
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, CoordinatorEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+from homeassistant.const import (
+    UnitOfPower,
+    PERCENTAGE,
+)
 
-from .const import DOMAIN, SENSOR_TYPES
-from .utils import get_service_points_list, get_live_data, get_displayed_data
+from . import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    coordinator = VoltelloCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
+    sensors = [
+        VoltelloSensor(coordinator, "grid", "Grid Power", "kW"),
+        VoltelloSensor(coordinator, "solar", "Solar Power", "kW"),
+        VoltelloSensor(coordinator, "battery_power", "Battery Power", "kW"),
+        VoltelloSensor(coordinator, "battery_charge", "Battery Charge", "%"),
+        VoltelloSensor(coordinator, "home", "Home Power", "kW"),
+        VoltelloSensor(coordinator, "ev", "EV Power", "kW"),
+    ]
 
-    entities = []
-    for sensor_type in SENSOR_TYPES:
-        entities.append(VoltelloSensor(coordinator, sensor_type))
-    
-    async_add_entities(entities)
+    async_add_entities(sensors)
 
-class VoltelloCoordinator(DataUpdateCoordinator):
-    def __init__(self, hass: HomeAssistant, entry):
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="Voltello",
-            update_interval=timedelta(seconds=300),
-        )
-        self.entry = entry
-
-    async def _async_update_data(self):
-        service_points = await self.hass.async_add_executor_job(
-            get_service_points_list, self.entry.data["customer_id"]
-        )
-        service_point_id = service_points['data']['servicePoints'][0]['servicePointId']
-        
-        live_data = await self.hass.async_add_executor_job(
-            get_live_data, service_point_id
-        )
-        
-        return get_displayed_data(live_data)
-
-class VoltelloSensor(CoordinatorEntity, Entity):
-    def __init__(self, coordinator, sensor_type):
+class VoltelloSensor(CoordinatorEntity, SensorEntity):
+    def __init__(self, coordinator, sensor_type, name, unit):
         super().__init__(coordinator)
-        self.sensor_type = sensor_type
-        self.sensor_data = SENSOR_TYPES[sensor_type]
+        self._sensor_type = sensor_type
+        self._attr_name = name
+        self._attr_native_unit_of_measurement = unit
+        self._attr_unique_id = f"voltello_{sensor_type}"
 
     @property
-    def name(self):
-        return f"Voltello {self.sensor_data['name']}"
-
-    @property
-    def unique_id(self):
-        return f"voltello_{self.sensor_type}"
-
-    @property
-    def state(self):
+    def native_value(self):
         data = self.coordinator.data
-        if self.sensor_data['key'] in data:
-            if isinstance(data[self.sensor_data['key']], dict):
-                if self.sensor_type == "battery_soc":
-                    return data["battery"]["stateOfCharge"]
-                return data[self.sensor_data['key']]["power"]
-            return data[self.sensor_data['key']]
-        return None
+        if not data:
+            return None
 
-    @property
-    def unit_of_measurement(self):
-        return self.sensor_data["unit"]
-
-    @property
-    def icon(self):
-        return self.sensor_data["icon"]
+        if self._sensor_type == "grid":
+            return data.get("grid")
+        elif self._sensor_type == "solar":
+            return data.get("solar", {}).get("power")
+        elif self._sensor_type == "battery_power":
+            return data.get("battery", {}).get("power")
+        elif self._sensor_type == "battery_charge":
+            return data.get("battery", {}).get("stateOfCharge")
+        elif self._sensor_type == "home":
+            return data.get("home")
+        elif self._sensor_type == "ev":
+            return data.get("ev")
