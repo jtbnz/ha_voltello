@@ -1,84 +1,66 @@
-from datetime import timedelta
-import logging
+from __future__ import annotations
+from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import ENERGY_KILO_WATT_HOUR
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+from homeassistant.const import (
+    UnitOfPower,
+    PERCENTAGE,
+)
 
-from .const import DOMAIN
-from .utils import get_service_points_list, get_live_data, get_displayed_data
+from . import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    api_token = config_entry.data["api_token"]
-    customer_id = config_entry.data["customer_id"]
-    utility_id = config_entry.data["utility_id"]
+    sensors = [
+        VoltelloSensor(coordinator, "grid", "Grid Power", "kW"),
+        VoltelloSensor(coordinator, "solar", "Solar Power", "kW"),
+        VoltelloSensor(coordinator, "battery_power", "Battery Power", "kW"),
+        VoltelloSensor(coordinator, "battery_charge", "Battery Charge", "%"),
+        VoltelloSensor(coordinator, "home", "Home Power", "kW"),
+        VoltelloSensor(coordinator, "ev", "EV Power", "kW"),
+    ]
 
-    coordinator = VoltelloDataUpdateCoordinator(hass, api_token, customer_id, utility_id)
-    await coordinator.async_config_entry_first_refresh()
+    async_add_entities(sensors)
 
-    sensors = []
-    for sensor_type in ["solar", "grid", "battery", "home", "ev"]:
-        sensors.append(VoltelloSensor(coordinator, sensor_type))
-
-    async_add_entities(sensors, True)
-
-class VoltelloDataUpdateCoordinator(DataUpdateCoordinator):
-    def __init__(self, hass, api_token, customer_id, utility_id):
-        self.api_token = api_token
-        self.customer_id = customer_id
-        self.utility_id = utility_id
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_interval=timedelta(minutes=1),
-        )
-
-    async def _async_update_data(self):
-        try:
-            service_points_list = get_service_points_list(self.customer_id)
-            service_point_id = service_points_list['data']['servicePoints'][0]['servicePointId']
-            live_data = get_live_data(service_point_id)
-            return get_displayed_data(live_data)
-        except Exception as err:
-            raise UpdateFailed(f"Error fetching data: {err}")
-
-class VoltelloSensor(SensorEntity):
-    def __init__(self, coordinator, sensor_type):
-        self.coordinator = coordinator
-        self.sensor_type = sensor_type
+class VoltelloSensor(CoordinatorEntity, SensorEntity):
+    def __init__(self, coordinator, sensor_type, name, unit):
+        super().__init__(coordinator)
+        self._sensor_type = sensor_type
+        self._attr_name = name
+        self._attr_native_unit_of_measurement = unit
+        self._attr_unique_id = f"voltello_{sensor_type}"
 
     @property
-    def name(self):
-        return f"Voltello {self.sensor_type.capitalize()}"
+    def native_value(self):
+        data = self.coordinator.data
+        if not data:
+            return None
 
-    @property
-    def state(self):
-        return self.coordinator.data.get(self.sensor_type, {}).get("power")
-
-    @property
-    def unit_of_measurement(self):
-        return ENERGY_KILO_WATT_HOUR
-
-    @property
-    def extra_state_attributes(self):
-        if self.sensor_type == "battery":
-            return {"state_of_charge": self.coordinator.data.get("battery", {}).get("stateOfCharge")}
-        return {}
-
-    @property
-    def should_poll(self):
-        return False
-
-    @property
-    def available(self):
-        return self.coordinator.last_update_success
-
-    async def async_update(self):
-        await self.coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self):
-        self.async_on_remove(self.coordinator.async_add_listener(self.async_write_ha_state))
+        if self._sensor_type == "grid":
+            return data.get("grid")
+        elif self._sensor_type == "solar":
+            return data.get("solar", {}).get("power")
+        elif self._sensor_type == "battery_power":
+            return data.get("battery", {}).get("power")
+        elif self._sensor_type == "battery_charge":
+            return data.get("battery", {}).get("stateOfCharge")
+        elif self._sensor_type == "home":
+            return data.get("home")
+        elif self._sensor_type == "ev":
+            return data.get("ev")

@@ -1,9 +1,9 @@
 {
     "domain": "voltello",
-    "name": "Voltello",
+    "name": "HA Voltello",
     "version": "1.0.4",
     "documentation": "https://github.com/jtbnz/ha_voltello",
-    "requirements": ["requests"],
+    "requirements": [],
     "dependencies": [],
     "codeowners": ["@jtbnz"],
     "iot_class": "cloud_polling"
