@@ -46,6 +46,20 @@ class VoltelloSensor(CoordinatorEntity, SensorEntity):
         self._attr_native_unit_of_measurement = unit
         self._attr_unique_id = f"voltello_{sensor_type}"
 
+        # Add icons based on sensor type
+        if self._sensor_type == "home":
+            self._attr_icon = "mdi:home"
+        elif self._sensor_type == "battery_power":
+            self._attr_icon = "mdi:battery-charging-100"
+        elif self._sensor_type == "battery_charge":
+            self._attr_icon = "mdi:battery"
+        elif self._sensor_type == "ev":
+            self._attr_icon = "mdi:ev-station"
+        elif self._sensor_type == "grid":
+            self._attr_icon = "mdi:power-plug"
+        elif self._sensor_type == "solar":
+            self._attr_icon = "mdi:solar-power"
+
     @property
     def native_value(self):
         data = self.coordinator.data
